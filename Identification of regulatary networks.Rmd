@@ -1,0 +1,118 @@
+---
+title: "RNA sequencing analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE,message=FALSE,warning=FALSE)
+```
+
+```{r include=FALSE,echo=FALSE,eval=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+
+C1 <- read_csv("C_S1_S2F.csv")
+C2 <- read_csv("C_S2_S3F.csv")
+C3 <- read_csv("C_S2_S3T.csv")
+T1S1 <- C_BUD %>% select(GeneID,C_S1_Bud_rpkm) %>% filter(C_S1_Bud_rpkm >5) 
+T1S2F <- C_BUD %>% select(GeneID,C_S2_Flat_rpkm) %>% filter(C_S2_Flat_rpkm >5) 
+T1S3F <- C_S2_S3F %>% select(GeneID,C_S3_Flat_rpkm) %>% filter(C_S3_Flat_rpkm >5) 
+T1S2T <- C_S2_S3T %>% select(GeneID,C_S2_Tube_rpkm) %>% filter(C_S2_Tube_rpkm >5) 
+T1S3T <- C_S2_S3T %>% select(GeneID,C_S3_Tube_rpkm) %>% filter(C_S3_Tube_rpkm >5)
+# YU TAI YI HAO
+Y1 <- read_csv("Y_S1_S2F.csv")
+Y2 <- read_csv("Y_S1_S3F.csv")
+Y3 <- read_csv("Y_S2T_S3T.csv")
+T2S1 <- Y1 %>% select(GeneID,Y_S1_Bud_rpkm) %>% filter(Y_S1_Bud_rpkm >1)
+T2S2F<- Y1 %>% select(GeneID,Y_S2_Flat_rpkm) %>% filter(Y_S2_Flat_rpkm >1)
+T2S3F<- Y2 %>% select(GeneID,Y_S3_Flat_rpkm) %>% filter(Y_S3_Flat_rpkm >1)
+T2S2T <- Y3 %>% select(GeneID,Y_S2_Tube_rpkm) %>% filter(Y_S2_Tube_rpkm >1)
+T2S3T <- Y3 %>% select(GeneID,Y_S3_Tube_rpkm) %>% filter(Y_S3_Tube_rpkm >1)
+C1Y1 <- read_csv("CS1_VS_YS1.csv")
+C2FY2F <- read_csv("CS2F_VS_YS2F.csv")
+C1Y1 %>% filter(C_S1_Bud_rpkm>5|Y_S1_Bud_rpkm>5) %>%filter(`log2 Ratio(Y_S1_Bud/C_S1_Bud)` < -1) %>% dim()
+C2FY2F %>% filter(C_S2_Flat_rpkm>5|Y_S2_Flat_rpkm>5) %>% filter(`log2 Ratio(Y_S2_Flat/C_S2_Flat)` < -1) %>% dim()
+```
+
+### Relation analysis amoung samples {#FIG}
+
+```{r,#Fig A,echo=FALSE,message=FALSE,warning=FALSE}
+library(tidyverse)
+allpeason <- read_csv("all_pearson.csv")
+all <- allpeason %>% column_to_rownames(var = "Sample")
+allpeason %>% gather(key = "y",value = "value",C_S1_B1:Y_S3_T3) %>% ggplot(aes(x=Sample,y=y,fill=value))+geom_tile(color="white")+scale_fill_gradient2(low = "blue",high = "red",mid = "white",midpoint = 0.5)+labs(x=" ",y=" ")+theme_minimal()
+pheatmap(G,border_color = "white",cluster_rows = FALSE,cluster_cols = FALSE)
+
+```
+
+
+
+Pincipal component analysis revealed that the ten samples could be clearly assigned to five groups as 
+
+```{r echo=FALSE}
+allsample <- read_csv("all_sample.csv")
+df.allsample <- allsample %>% select(contains("rpkm")) %>% as.data.frame() %>% t()
+colnames(df.allsample) <- str_remove_all(colnames(df.allsample),"_|rpkm")
+# corrplot of different sample
+
+G <- cor(df.allsample)
+corrplot(G,col = col1(100),cl.lim = c(0,1),method = "color")
+
+
+pcA <- prcomp(df.allsample,center= TRUE)
+pcA <- as.data.frame(pcA)
+tissue <-rownames(df.allsample)
+rot <- pcA$x%>% as.data.frame() %>%  mutate(variety=rep(c("CS1","CS2F","CS2T","CS3F","CS3T","YS1","YS2F","YS2T","YS3F","YS3T"),each=3),cultivar=rep(c("C","Y"),each=15),tissue=rep(c("Bud","Ray_flower","Disc_flower","Ray_flower","Disc_flower"),each=3,2))
+
+percentVariance <- pcA$sd^2/sum(pcA$sd^2)*100
+
+ggplot(rot,aes(PC1,PC2,color=tissue))+geom_point(size=2,alpha=0.8)+stat_ellipse(aes(group=tissue,color=tissue))+scale_color_brewer(palette = "Dark2")+theme_classic()+theme(legend.direction = 'horizontal', legend.position = 'top')+labs(x="PC1(41.74% explained var.)",y="PC2(17.09% explained var.",color=" ")
+
+plot_ly(rot,x=~PC1,y=~PC2,z=~PC3) %>% add_markers(color=~variety,colors=c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","#666666","#000000","#d11141"))
+
+
+
+ggplot(rot,aes(x=PC1,y=PC2,color=variety))+geom_point(size=5,alpha=0.8,show.legend = FALSE)+geom_hline(yintercept = 0,linetype=2)+
+  geom_vline(xintercept = 0,linetype=2)+scale_color_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D", "#666666","#000000","#d11141"))+ggrepel::geom_label_repel(aes(label=variety),show.legend = FALSE)+
+  theme_minimal()
+
+```
+
+```{r eval=FALSE,echo=FALSE}
+T1S1B <- CS1$GeneID
+T1S2T <- CS2T$GeneID
+T1S2P <- CS2F$GeneID
+T1S3T <- CS3T$GeneID
+T1S3P <- CS3F$GeneID
+venn.diagram(list(s2F=X2,S2T=X3,S3T=X5,S3F=X4),"stage.tiff",fill=brewer.pal(4,"Dark2"))
+# YU TAI YI HAO
+T2S1 <- T2S1$GeneID
+T2S2F <- T2S2F$GeneID
+T2S3F <- T2S3F$GeneID
+T2S2T <- T2S2T$GeneID
+T2S3T <- T2S3T$GeneID
+venn.diagram(list(T2S1=T2S1,T2S2F=T2S2F,T2S3F=T2S3F,T2S2T=T2S2T,T2S3T),"T2.tiff",fill=brewer.pal(5,"Set2"))
+```
+![correlate](#Fig A)
+
+
+
+```{r}
+chaju <- read_csv("SIHAICHAJU.csv")
+chaju$Land <- as.factor(chaju$Land)
+ggplot(data = chaju,aes(Class))+geom_boxplot(aes(y=Bud,fill=Land))+theme_classic()+
+  theme(axis.text = element_text(size = 14,color = "#000000"),axis.title = element_text(size = 14),
+        legend.text = element_text(size = 12))
+
+
+```
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,227 @@
+--- 
+title: "RNA sequence analysis"
+author: "Luo Chang"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: bookdown::html_document2
+documentclass: article
+bibliography: ["book.bib"]
+biblio-style: "apalike"
+link-citations: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Introduction {-}
+<font size=3> Chrysanthemum (*Chrysanthemum morifolium* and *Coreopsis tinctoria*) has been cultivated for tea and food utilizations for many years. The tea made from chrysanthemum flowers or the cooked dishes of fresh chrysanthemum leaves are considered to be beneficial to human health. These beneficial effects may include but are not limited to anti-inflammation [@Do2009;@Zhang2013Coreosides], antioxidant [@Duh2014Antioxidant;@Tao2015Chemical], and antiallergic properties [@Yuan2012Comparative]. Caffeoylquinic acids [@Kim2005Identification; @Duh1997Antioxidative], flavonoids [@Sun2003A;@Hu1994Anti], and essential oils, are the major ingredients in chrysanthemum and should be responsible for these aforementioned activities.
+
+Flavonoids are a large group of plant secondary metabolites. Flavonoids  representing 60% of all natural polyphenols, are present in all parts of plants, especially in flowers and leaves. Based on their structure, flavonoids can be classified into distinct sub-groups including flavones,flavonols, flavanones, flavanols, isoflavonoids and anthocyanidins[@Andersen2006Flavonoids]. Among them, flavones have a diversity of functions and playing important physiology roles in plant, including UV protection [@Schmitz2003Contribution], interactions with other organisms [@Peters1986A;@Kong2007Activity],regulation of auxin transport [@Mathesius], copigmentation with anthocyanins[@Yoshida] and lignification[@Lan1284]. Flavonol derivatives, especially quercetins and kaempferols, have the capacity to inhibit auxin transport [@Kuhn2011Flavonols].
+
+One of the most abundant and most studied flavonoid is 4',5,7-tri-hydroxyflavone, commonly referre to as apigenin, with molecular structure C~15~H~10~O~5~ and molecular mass 270.24 g mol ^-1^ (Fig.\@ref(fig:Apigenin)). Apigenin is found in significant quantities in a variety of vegetables and fruits such as parsley, celery, chamomile, oranges, thyme, onions, honey and spices, as well as beverages derived from plants; tea, beer and wine [@Zhou2016Natural;@Min2016Role]. It is a secondary plant metabolite, usually found in nature in glycosylated form, more soluble than its pure form which is unstable and quite insoluble in water and organic solvents [@Tang2017Pharmacokinetic; @Min2016Role]. 
+
+Interest in apigenin, as a beneficial and health promoting agent, has grown in recent years because of its low intrinsic toxicity and remarkable effects on normal *vs* cancerous cells [@Gupta2001Selective;@Shukla2010Apigenin]. There is also very little evidence that suggests that apigenin promotes adverse metabolic reactions *in vivo* when consumed as part of a normal diet. Moreover, apigenin has been increasingly recognized as a cancer chemopreventive agent in a series of studies done both *in vitro* and *in vivo*. This interest could be largely attributed to its potent antioxidant and anti-inflammatory activities [@Shukla2010Apigenin].
+
+```{r Apigenin,fig.cap="**Chemical structure of dietary flavonoid apignin**.",echo=FALSE,fig.align='center'}
+knitr::include_graphics(c("apigenin.png"))
+
+```
+
+The apigenin biosynthesis pathway is a branch of the flavonoid biosynthesis pathway that is derived from the phenylpropanoid biosynthesis pathway (Fig.\@ref(fig:pathway)). Briefly, the ABP begins with the formation of naringnin chalcones by the chalcone synthase enzyme (CHS). Next, chalcones isomerase (CHI) converts naringnin chalcone into naringenin. In dicots, two completely different flavone synthase (FNS) enzymes, FNSⅠ and FNSⅡ has long been described for the conversion of flavones from flavanones.The FNSⅠ class belongs to the superfamily of soluble Fe^2+^/2-oxoglutarate-dependent dioxygenases (2-ODDs)[@Martens2005Flavones].Studies showed that the rice FNSⅠ enzyme OsFNSⅠ-1 converts the flavone(*2S*)-narigenin into apigenin *in vitro*[@Lee2008Characterization].  FNSⅡ enzymes correspond to oxygen- and NADPH-dependent cytochrome P450 (CYPs) membrane-bound monooxygenases, which are widespread among the higher plants[@Martens2005Flavones]. In dicots, all characterized FNSⅡ enzymes belong to the CYP93B subfamily, but their catalytic mechanisms are different[@Fliegmann2010Flavone]. Recently, three FNSⅡ (LjFNSⅡ-1.1,LjFNSⅡ2.1,and LmFNSⅡ-1.1) from *Lonicera japonica* and *Lonicera macranthoides* were confirmed to convert eriodictyol and naringenin directly to luteolin and apigenin, respectively [@Wu2016Flavone]. </font>
+
+```{r pathway,echo=FALSE,fig.align="center",fig.cap="**Apigenin biosynthesis pathway.Apigenin come from naringenin desaturated by FNSⅡ, which are NADPH-dependent cytochrome P450 monoxygenases **",fig.show='asis',out.width="30%"}
+knitr::include_graphics("pathway.png")
+```
+
+
+## RESULTS {-}
+
+
+As FNSⅡ are belong to the CYP93B subfamily in dicots, a BLASTP search of the Chrysanthemum proteome () for sequences with cloest homology to CYP93B was performed to identify potential FNSⅡ candidates.  
+
+
+
+### Changes in the content of Apigenin and the activity of their biosynthetic genes in different flowering tissues at different stages in Chrysanthemum {-} 
+
+Flowers of cv Yutai and 14-C-1 at three stages were harvested 
+(Figure \@ref(fig:flower)), and the determination of Apigenin levels indicated a major accumulation in flower petals at stage2 and stage3. Apigenin levels were higher in petals than in disc flowers at the same stages (Figure \@ref(fig:apigenin)).
+
+```{r flower,echo=FALSE,fig.align='center',fig.cap="**Stages of flower development and sampling times of two Chrysanthemum varieties**",fig.show='hold',out.width='50%'}
+knitr::include_graphics(c("flower.png","tissue.png"))
+```
+
+```{r apigenin,echo=FALSE,fig.align="left",fig.cap="**Changes in the contents of Apigenin**",fig.show='hold',out.width='50%'}
+knitr::include_graphics(c("Apigenin_content.png"))
+```
+
+### Putative FNSⅡ enzymes in Chrysanthemum{-}
+
+Based on the annotation of RNA-seq analysis, two FNS gene were identified (Unigene0057769 and Unigene0051304). Two sequences,Unigene0057769 and Unigene0051304, show 82% to 69% to known FNSⅡ enzymes from *Gerbera* spp. hybrids (CYP93B2; @GhCYP93B2), respectively. Both of them are cytochrome P450 proteins containing diagnostic signatures of a Pro hinge region, an oxygen-binding pocket, and a heme-binding motif (Figure \@ref(fig:CmCYP93B1)). To infer the phylogeny of our chrysanthemum sequences within the CYP93B family, phylogenetic analysis was performed together with members of CYP93B from other plants. As shown in Figure \@ref(fig:cyp93btree), CmCYP93B1 and CmCYP93B1_1 fell into into same cluster and clustered with *Callistephus chinenis* and *Gerbera hybrida* FSNⅡ enzymes.
+As shown in Figure \@ref(fig:CYP93B1), the transcript levels of *CYP93B1* were higher in ray flowers than in disc flowers at the same stage and exihibiting a positive correlation with Apigenin contents. However,extremely low transcript levels were detected in ray flowers for *CYP93B1_1*. 
+Reverse transcription (RT)-PCR experiments with gene-specific primers were performed to analyze the expression of CYP93B1 in flowers at different stages and illustrating similar pattern with Apigenin contents and transcript levels. Therefore,CYP93B1 is more likely to play a role in flavone accumulation in Chrysanthemum flowers.
+
+```{r CmCYP93B1,fig.cap="**Comparison of Chrysanthemum FNSⅡ proteins with GhCYP93B2 protein**.The amino acid sequences of FNSⅡ from Chrysanthemum were aligned with the amino acid sequence of GhFNSⅡ from *Gerbera hybrida* (CYP93B2) using MEGA 6.0. The proline rich membrane hinge (LQ/RPPPSP),I-helix (AATDTTA),E-R-R triade consisting of the K-helix consensus sequence (KESFR) and the consensus sequence (PERF),heme-binding domain (PFGSGRRGCPG) are boxed; these are conserved motifs among P450s.The cysteine in the heme-binding domain is marked by black arrow. Residues shaded in color indicate identical amino acids.", echo=FALSE,fig.align='center',out.width="80%"}
+knitr::include_graphics("CmCYP93B1.png")
+```
+
+
+```{r cyp93btree,echo=FALSE,fig.align='center',fig.cap="**phylogenetic tree**",out.width="70%"}
+knitr::include_graphics("CYP93B_tree.png")
+```
+
+```{r CYP93B1,echo=FALSE,fig.align="center",fig.cap="**Transcript level of CYP93B1 and CYP93B2 in chrysanthemum**"}
+knitr::include_graphics(c("CYP93B1_rpkm.png"))
+```
+
+```{r CYP93B1_qpcr,echo=FALSE,fig.align="center",fig.cap="**Relative expression of CYP93B1  in chrysanthemum**",out.width='50%'}
+knitr::include_graphics("CYP93B1_qpcr.png")
+```
+
+### Network analysis to predict the gene regulated flavone synthase II {-}
+
+To narrow the number of potential transfactor candidates involved in apigenin biosythesis, we used coexpression analyses with the genes in apigenin biosythesis pathways. We verified the reliability of the data base by searching correlation coefficients among the known genes encoding apigenin biosynthetic enzymes. The linkages between genes that had a higher correlation coefficient (*r* >0.6) in all transcriptomic data are presented in Figure \@ref(fig:cyp93b1net). 
+
+```{r cyp93b1net,echo=FALSE,fig.align='center',fig.cap="Correlation among genes involved in the biosynthesis of apigenin. Blue,brown point indicate genes encoding transcription factors, biosynthetic enzymes,respectively. Positive correlations(*r* >0.6) in all data sets are indiced by connecting lines. Genes in the black circles belong to MYB, bHLH family.",out.width='70%'}
+knitr::include_graphics("CYP93B1_net.png")
+
+```
+
+
+```{r TF_FNS,echo=FALSE}
+TF_FNS<- read.csv("TF_FNS_0.6.csv",header = TRUE,na.strings =" " )
+knitr::kable(
+  TF_FNS,
+  caption = 'TF_FNS_0.6',booKtabs=TRUE,
+  align = "c"
+)
+```
+
+
+<font size=3 color=#FF0000> *RNA-Seq analysis on developing flower of two chrysanthemum varieties* </font> 
+  
+
+RNA-Seq analysis was performed on the samples described above with three biological replicates for each. In total, 30 libraries were constructed and analyzed. After removing low-quality reads, the average number of reads per library was over 60 million (Table\@ref(tab:table)). The numbers of transcripts identified in each sample, expressed in FPKMs, are show in FIG. Genes with normalized reads lower than 1.0 FPKM were removed from the analysis. In total, 54088,51532,48181,54647 and 52662 transcripts were found to be expressed in S1,S2F,S3F,S2T and S3T of C1, respectively. Similarly,56816,53286	,50597,56093 and 55003 transcripts were identified in the samples from the respective stages and tissues of the C2 cultivar.	
+
+### *Identification of WGCNA modules associated with Flavonoid content.* {-}
+To obtain a comprehensive understanding of genes expressed in the successive developmental stages across the two cultivars,and to identify the specific genes that are highly associated with flavonoid, a WGCNA was performed [@Langfelder2008]. After filtering out the genes with a low expression (FPKM<1),8148 genes were retained for the WGCNA.Coexpression net works were constructed on the basis of pairwise correlations of gene expression across all samples. Modules were defined as clusters of highly interconnected genes, and genes within the same cluster have high correlation coefficients among them. This analysis identified 18 distinct modules (labeled with different colors) shown in the dendrogram in *FIG*, in which major tree branches define the modules. The 18 modules correlated with distinct samples due to sample-specific expression profiles (Supplementary Table ).
+
+
+
+## MATERIALS AND METHODS {-}
+
+### Cloning and phylogenetic analysis of *FNSⅡ* genes from Chrysanthemum.{-}
+Total RNA from Chrysanthemum was extracted from flowers at different stages using ~~RNA-prepPure Plant Kits (Tiangen,China)~~.cDNA for the rapid-amplification of cDNA ends (RACE) was prepared according to the user manual for the SMART RACE cDNA Amplification Kit (Clontech, Japan), and the cDNA for the RT-PCR analyses was synthesized using the ~~AMV Reverse Transcription System (Promega, USA)~~. Genes were amplified by using a ~~Fast HiFidelity PCR Kit (Tiangen, China)~~, according to the manufacturer's instructions; PCR products were cloned into the ~~pLB vector (Tiangen,China)~~ and sequenced. The sequences of newly found genes from this study were submitted to the GenBank database and the accession numbers are listed in ~~Supplementary Table S1~~. For sequence alignment and phylogenetic analysis, the deduced amino acid sequences were compared with the MEGA 6.0 program using the Neighbor-Joining method with 1000 bootstrap relications [@MEGA6]. 
+
+### Yeast expression of cytochrome P450 proteins and enzyme assays {-}
+
+The coding regions of *CYP93B1* were subcloned into the pYeDP60 yeast expression vector downstream of the *GAL1* promoter. All constructs, including the empty vector as a negetive control, were transformed into the WAT11 yeast strain using the lithium acetate method according to the manufacturer's instructions (Clontech, Japan).*In vivo* yeast assays were performed, as previously described, with modifications [@yeast_assays]. The cultures were extracted with an equal volume ethyl acetate and evaporated under nitrogen gas. The residues were then resolved in 200μL 80% methanol for further HPLC analysis.
+
+### Y1H assay
+
+The coding sequence (CDS) of *CmMYB330* (bp) and *HY5* were ligated into the pGADT7 vector using the homgenesis reconstuct method. Two *CYP93B1*promoter fragments with MBSs were ligated into the pHIS2 vector (Clontech) (method). All constructs were transformed into yeast strain AfHY187 using the lithium acetate method [@ZhangA]. Y1H was conducted according to the manufacuter's instructions (Clontech). All primers used are listed in 
+
+### Correlation analysis
+
+Correlation tests were performed using Pearson product-moment correlation coefficient (Pearson's *r*) with a two-tailed test. Correlations were considered positive when Pearson's *r*>0.65 and *P*<0.05
+
+Relation analysis amoung samples\@ref(fig:Fig-A).
+
+
+
+```{r echo=FALSE,eval=FALSE}
+library(tidyverse)
+library(RColorBrewer)
+C1 <- read_csv("C_S1_S2F.csv")
+C2 <- read_csv("C_S2_S3F.csv")
+C3 <- read_csv("C_S2_S3T.csv")
+Y1 <- read_csv("Y_S1_S2F.csv")
+Y2 <- read_csv("Y_S1_S3F.csv")
+Y3 <- read_csv("Y_S2T_S3T.csv")
+
+RPKM <- function(k){
+  output <- double()
+   output[[1]] <-k %>%  filter(k>=100) %>%summarise(n1=n())
+   output[[2]] <- k %>% filter(k>5 & k<100) %>% summarise(n2=n())
+  output[[3]] <- k %>% filter(k>=1 & k<=5) %>% summarise(n3=n())
+  output[[4]] <- k %>% count()
+  output <-as.data.frame(output)
+  output
+}
+
+C1S1 <- C1 %>% select(C_S1_Bud_rpkm) %>% RPKM()
+C1S2F <- C1 %>% select(C_S2_Flat_rpkm) %>% RPKM()
+C1S3F <- C2 %>% select(C_S3_Flat_rpkm) %>% RPKM()
+C1S2T <- C2 %>% select(C_S2_Tube_rpkm) %>% RPKM()
+C1S3T <- C3 %>% select(C_S3_Tube_rpkm)%>% RPKM()
+
+C2S1 <- Y1 %>% select(Y_S1_Bud_rpkm) %>% RPKM()
+C2S2F <- Y1 %>% select(Y_S2_Flat_rpkm) %>% RPKM()
+C2S3F <- Y2 %>% select(Y_S3_Flat_rpkm) %>% RPKM()
+C2S2T <- Y3 %>% select(Y_S2_Tube_rpkm) %>% RPKM()
+C2S3T <- Y3 %>% select(Y_S3_Tube_rpkm)%>% RPKM()
+
+
+RPKM_NUM_df <- rbind(C1S1,C1S2F,C1S2T,C1S3F,C1S3T,C2S1,C2S2F,C2S2T,C2S3F,C2S3T)
+
+rownames(RPKM_NUM_df) <- c("C1S1","C1S2F","C1S2T","C1S3F","C1S3T","C2S1","C2S2F","C2S2T","C2S3F","C2S3T")
+
+RPKM_NUM_df %>% mutate(sample=rownames(RPKM_NUM_df),cultivar=rep(c("C1","C2"),each=5))%>% gather(key = express,value = Count,n1:n3) %>% ggplot(aes(x=sample,y=Count,fill=factor(express,labels=c("rpkm>=100","5<rpkm<100","1<=rpkm<=5"))))+geom_bar(stat = 'identity',width = 0.6)+scale_fill_brewer(palette = "Dark2")+labs(fill="")+theme_bw()+theme(axis.text = element_text(face = "bold",size = 14,colour = "black"),strip.background = element_blank(),strip.text = element_blank(),axis.title = element_text(face = "bold",size = 14,colour = "black"),legend.text =element_text(size = 14) )+facet_wrap(~cultivar,scales = "free_x")
+
+
+```
+
+
+
+
+```{r Fig_B,fig.cap="Venn",eval=FALSE,echo=FALSE,message=FALSE,warning=FALSE}
+library(UpSetR)
+
+C1S1 <- C1 %>%  mutate(C1S1=ifelse(C_S1_Bud_rpkm>1,1,0))%>% select(C1S1) 
+C1S2F <- C1  %>% mutate(C1S2F=ifelse(C_S2_Flat_rpkm>1,1,0))%>% select(C1S2F)
+C1S3F <- C2  %>% mutate(C1S3F=ifelse(C_S3_Flat_rpkm>1,1,0))%>% select(C1S3F)
+C1S2T <- C2  %>% mutate(C1S2T=ifelse(C_S2_Tube_rpkm>1,1,0))%>% select(C1S2T)
+C1S3T <- C3 %>% mutate(C1S3T=ifelse(C_S3_Tube_rpkm>1,1,0))%>% select(C1S3T)
+
+C2S1 <- Y1 %>% mutate(C2S1=ifelse(Y_S1_Bud_rpkm>1,1,0))%>% select(C2S1) 
+C2S2F <- Y1 %>% mutate(C2S2F=ifelse(Y_S2_Flat_rpkm>1,1,0))%>% select(C2S2F)
+C2S3F <- Y2 %>% mutate(C2S3F=ifelse(Y_S3_Flat_rpkm>1,1,0))%>% select(C2S3F)
+C2S2T <- Y3 %>% mutate(C2S2T=ifelse(Y_S2_Tube_rpkm>1,1,0))%>% select(C2S2T)
+C2S3T <- Y3 %>% mutate(C2S3T=ifelse(Y_S3_Tube_rpkm>1,1,0))%>% select(C2S3T)
+
+VenC1 <- data.frame(C1S1,C1S2F,C1S3F,C1S2T,C1S3T)
+
+upset(VenC1,nsets =10,order.by = "freq",sets.bar.color = "#56B4E9" )
+
+```
+
+
+```{r Fig-A,fig.cap="correlation",echo=FALSE,eval=FALSE,message=FALSE,warning=FALSE}
+allpeason <- read_csv("all_pearson.csv")
+allpeason %>% gather(key = "y",value = "value",C_S1_B1:Y_S3_T3) %>% ggplot(aes(x=Sample,y=y,fill=value))+geom_tile(color="grey")+scale_fill_gradient2(low = "white",high = "darkgreen",midpoint = 0.5)+labs(x=" ",y=" ")+theme_minimal()+theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r Fig_c,eval=FALSE,echo=FALSE}
+allsample <- read_csv("all_sample.csv")
+df.allsample <- allsample %>% select(contains("rpkm")) %>%as.data.frame() %>% t()
+pcA <- prcomp(df.allsample)
+rot <- pcA$x%>% as.data.frame() %>%  mutate(variety=rep(c("C1S1","C1S2F","C1S2T","C1S3F","C1S3T",                                                               "C2S1","C2S2F","C2S2T","C2S3F","C2S3T"),each=3))
+ggplot(rot,aes(x=PC1,y=PC2,color=variety))+geom_point(size=3)+geom_hline(yintercept = 0,linetype=2)+
+  geom_vline(xintercept = 0,linetype=2)+ggrepel::geom_text_repel(aes(label=variety))+
+  theme_minimal()
+```
+
+
+
+```{r table,echo=FALSE,eval=FALSE}
+
+All_Reads_Num <- read.csv("gene_num.csv",header = TRUE,na.strings =" " )
+colnames(All_Reads_Num) <- c('Sample',"Sample Tissues"," ","Gene Num"," ")
+knitr::kable(
+  All_Reads_Num,
+  caption = 'all reads number',booKtabs=TRUE,
+  align = "c"
+)
+```
+## REFERENCES {-}

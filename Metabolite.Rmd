@@ -1,0 +1,339 @@
+---
+title: "Untitled"
+author: "Luo Chang"
+date: "2019/5/2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r }
+library(tidyverse)
+library(pheatmap)
+library(RColorBrewer)
+library(d3heatmap)
+metabolite <- read_csv("metabolite.csv")
+metabolite_g <- fread("metabolite.csv")
+# all meatabolite
+
+Flavone <- metabolite %>% filter(str_detect(Class,fixed("Flav",ignore_case = TRUE)))%>% select(Compounds,C.S1.B.1:Y.S3.T.3) %>% gather(key = sample,value = mass,C.S1.B.1:Y.S3.T.3) %>% mutate(species=ifelse(str_detect(sample,fixed("C",ignore_case = FALSE)),"14_C_1","YUTAI")) %>% separate(sample,into = c("tissue","NO"),sep = 6) %>% group_by(Compounds,species,tissue) %>%summarize(Mean=mean(mass)) %>%ungroup() %>%  select(Compounds,tissue,Mean) %>%  spread(key = tissue,value = Mean) 
+Flavone <- as.data.frame(Flavone)
+rownames(Flavone) <- Flavone$Compounds
+Flavone_m <- Flavone[,-1]
+colnames(Flavone_m) <- c("CS1B","CS2R","CS2D","CS3R","CS3D","YS1B","YS2R","YS2D","YS3R","YS3D")
+
+
+annotation_row <- data.frame(Class=factor(metabolite$Class))
+rownames(annotation_row) <- metabolite$Compounds
+
+annotation_col <- data.frame(Cultivar=factor(rep(c("C_14_1","Yutai"),each=5)),
+                      Tissue=factor(rep(c("Bud","Ray_flower","Disc_flower","Ray_flower","Disc_flower"),each=1,2)))
+rownames(annotation_col) <- colnames(Flavone_m)
+ann_colors <- list(Cultivar=c(C_14_1="#D55E00",Yutai="#56B4E9"),
+                  Tissue=c(Bud="#009E73",Ray_flower="#CC79A7",Disc_flower="#F0E442"),
+                  Class=c(Flavanone="#BF5B17",Flavone="#F0027F",Flavonoid="#386CB0",Flavonol="#FFFF99",Isoflavone="#FDC086"))
+
+pheatmap(Flavone_m,scale = "row",color = colorRampPalette(c('blue',"white","red"))(100),show_rownames = FALSE,cutree_cols = 3,cluster_rows = TRUE,annotation_row = annotation_row,annotation_col = annotation_col,
+         annotation_colors = ann_colors,fontsize = 14,cellwidth = 45)
+
+
+# Flavonoid pheatmap
+
+Flavone <-metabolite %>% filter(Compounds=="Apigenin") %>%  select(Compounds,C.S1.B.1:Y.S3.T.3) %>% gather(key = Sample,value = Expre,C.S1.B.1:Y.S3.T.3)
+pheatmap(Flavone,scale = "row",cluster_cols = FALSE,color = colorRampPalette(c('blue',"white","red"))(100))
+
+pheatmap(Flavone,scale = "row",color = colorRampPalette(c('blue',"white","red"))(100),annotation_col = annotation_col,show_rownames = FALSE,annotation_colors = ann_colors,annotation_row = annotation_row,cluster_rows = TRUE,cutree_cols = 3)
+
+annotation_row <- data.frame(Class=factor(Flavone$Class))
+
+rownames(annotation_row) <- Flavone$Compounds
+
+annotation_col <- data.frame(Stage=factor(rep(c("stage1","stage2","stage2","stage3","stage3"),each=3,2)),
+                            Cultivar=factor(rep(c("C_14_1","Yutai"),each=15)),
+                            Tissue=factor(rep(c("Bud","Petal","Tuber","Petal","Tuber"),each=3,2)))
+rownames(annotation_col) <- colnames(Flavone)
+ann_colors <- list(Stage=c(stage1="#4DAF4A",stage2="#984EA3",stage3="#FF7F00"),
+                  Cultivar=c(C_14_1="#E41A1C",Yutai="#377EB8"),
+                  Tissue=c(Bud="#FFFF33",Petal="#A65628",Tuber="#A1D99B"),
+                  Class=c(Flavonol="#7FC97F",Flavone="#BEAED4",Flavanone="#FDC086",Isoflavone="#FFFF99",Flavonoid="#386CB0"))
+
+
+
+
+```
+
+```{r}
+metabolite_class <- read_csv("metabolite_stat.csv")
+
+metabolite_class %>% filter(Type!='all') %>% mutate(Type=fct_reorder(Type,num),Class=ifelse(str_detect(Type,fixed("Flav",ignore_case = TRUE)),"R","L")) %>%
+ggplot(aes(Type,num))+geom_bar(aes(fill=Class),stat = "identity",show.legend=FALSE)+geom_text(aes(label=num),vjust=0,nudge_y = 4)+coord_flip()+ 
+scale_fill_manual(values = c("#009E73","#E69F00"))+theme_minimal()+theme(axis.text = element_text(size = 14,colour = "#000000"),axis.title = element_text(size = 14))+labs(x="Metabolite Class",y="Number")
+
+```
+
+# 14-C-1 VS YUTAIYIHAO filter
+
+```{r}
+c_vs_y <- read.csv("C-VS-Y-meta.csv",header = TRUE)
+c_vs_y <- c_vs_y %>%  filter(str_detect(Class,fixed("flavo",ignore_case = TRUE))) %>% select("Compounds",C.S1.B.1:Y.S3.T.3) %>% column_to_rownames(var = "Compounds")
+
+c_y <- c_vs_y %>% filter(str_detect(Class,fixed("Flav",ignore_case = TRUE)))%>% select(Compounds,C.S1.B.1:Y.S3.T.3) %>% gather(key = sample,value = mass,C.S1.B.1:Y.S3.T.3) %>% mutate(species=ifelse(str_detect(sample,fixed("C",ignore_case = FALSE)),"14_C_1","YUTAI")) %>% separate(sample,into = c("tissue","NO"),sep = 6) %>% group_by(Compounds,species,tissue) %>%summarize(Mean=mean(mass)) %>%ungroup() %>%  select(Compounds,tissue,Mean) %>%  spread(key = tissue,value = Mean) 
+c_vs_y <- as.data.table(c_vs_y)
+flavo <- c("Flavanone","Flavone","Flavonoid","Flavonol","Isoflavone")
+col <- c(2:31,44)
+
+c_vs_y_m <- c_vs_y[Class%in%flavo,..col]
+c_vs_y_m <- melt(c_vs_y_m,id.vars = "Compounds",variable.name = "tissue",value.name = "mass")
+c_vs_y_m[,lapply(.SD, mean),by=.(Compounds,tissue)][]
+
+c_y <- as.data.frame(c_y)
+rownames(c_y) <- c_y$Compounds
+c_y_m <- c_y[,-1]
+colnames(c_y_m) <- c("CS1B","CS2R","CS2D","CS3R","CS3D","YS1B","YS2R","YS2D","YS3R","YS3D")
+annotation_col <- data.frame(Cultivar=factor(rep(c("C_14_1","Yutai"),each=5)))
+rownames(annotation_col) <- colnames(c_y_m)
+ann_colors <- list(Cultivar=c(C_14_1="#D55E00",Yutai="#56B4E9"))
+
+pheatmap(c_y_m,scale = "row",cluster_cols = FALSE,cluster_rows = FALSE,color = colorRampPalette(c('blue',"white","red"))(100),border_color = "white",gaps_col =c(5,5),cellwidth = 20,cellheight = 20,annotation_col = annotation_col, annotation_colors = ann_colors,fontsize = 14)
+
+```
+
+# using for drugs
+```{r}
+selected_meta <- metabolite %>% filter(Compounds%in%drug)%>% select(Compounds,C.S1.B.1:Y.S3.T.3) %>% gather(key = Sample,value = value,C.S1.B.1:Y.S3.T.3) %>% arrange(Compounds) %>% mutate(tissue=rep(c("CS1","CS2F","CS2T","CS3F","CS3T","YS1","YS2F","YS2T","YS3F","YS3T"),each=3,4)) 
+
+selected_meta <- read_csv("Apigenin.csv")
+# Fig Apigenin_content
+selected_meta1 <-
+  
+  selected_meta %>% group_by(Compounds,tissue)%>% summarise(Mean=mean(value),SD=sd(value)) %>% 
+mutate(organ=rep(c("S1B","S2R","S2D","S3R","S3D"),2),VAR=ifelse(str_detect(tissue,"C"),"14_c_1","yutai"))%>% filter(Compounds=="Apigenin") %>% 
+ggplot(aes(organ,Mean,fill=VAR))+geom_bar(stat = "identity",color="#000000",alpha=0.8,position = "dodge",width = 0.8,size=0.6)+theme_light()+geom_errorbar(aes(ymin=Mean-SD,ymax=Mean+SD),position = position_dodge(width=0.9),width=0.2,size=0.8)+scale_fill_manual(values = c("#8c8c8c","white"))+theme(axis.text = element_text(size = 14,color = "#000000"),legend.text =element_text(size = 14,color = "#000000"),panel.grid = element_blank(),legend.position = c(0.2,0.8))+labs(x=" ",y=" ",fill=" ")
+
+rownames(Flavone) <- Flavone$Compounds
+Flavone <- Flavone[,-1]
+pheatmap(Flavone,scale = "row",color = colorRampPalette(c('blue',"white","red"))(100))
+
+drug <- c("Naringenin chalcone", "Naringenin", "Apigenin", "Apigenin 7-O-glucoside (Cosmosiin)")
+
+write.csv(unigene_tf,file = "FNS_CHS_TF.csv")
+
+
+```
+# KEGG Net work
+```{r}
+library(tidygraph)
+library(ggraph)
+library(igraph)
+library(graphlayouts)
+library(pheatmap)
+# 转录因子
+TF <- read_csv("TF.csv")
+TF <- TF %>% left_join(stage_mean,by="GeneID") %>% select(GeneID,TF_family,Symbol)
+unigene_tf <- c_stage_all %>% left_join(t_stage_all,by="GeneID") %>%  filter(GeneID%in%TF$GeneID) %>% select(GeneID,contains("rpkm"),-Y_S3_Flat_rpkm,-Y_S3_Tube_rpkm )%>% filter_all(all_vars(.> 1))%>% column_to_rownames(var = "GeneID")
+
+# kegg注释基因
+kegg_gene <- read_csv("kegg_flavono_gene_filter.csv")
+k_gene <- kegg_gene %>% filter(GeneID%in% c("Unigene0066042","Unigene0057769","Unigene0053354","Unigene0053319","Unigene0046529","Unigene0050335","Unigene0055520"))%>% select(GeneID,Symbol)
+kegg_gene <- c_stage_all %>%left_join(t_stage_all,by="GeneID") %>% filter(GeneID%in% k_gene$GeneID) %>% select(GeneID,contains("rpkm"),-Y_S3_Flat_rpkm,-Y_S3_Tube_rpkm)%>% column_to_rownames(var = "GeneID")
+
+
+# kegg注释黄酮类次生代谢物
+kegg_meta <- read_csv("kegg_flavono_meta.csv")
+kegg_meta <- kegg_meta %>% select(Compounds,C.S1.B.1:Y.S3.T.3) %>% column_to_rownames(var = "Compounds")
+# 转录组数据
+stage <- c_stage_all %>%left_join(t_stage_all,by="GeneID") %>% 
+select(GeneID,contains("rpkm"),-Y_S3_Flat_rpkm,-Y_S3_Tube_rpkm ) %>% filter_all(all_vars(.> 5)) %>% column_to_rownames(var = "GeneID")
+m.vars <- apply(stage,1,var)
+gene_wgcna <- stage[which(m.vars>quantile(m.vars,probs = seq(0,1,0.25))[4]),]
+gene_wgcna <- gene_wgcna %>% select(contains("C"),contains("Y"))
+# 所有黄酮类次生代谢物
+Flavone <- metabolite %>% filter(str_detect(Class,fixed("Flavone",ignore_case = FALSE))) %>% select(Compounds,C.S1.B.1:Y.S3.T.3) %>% column_to_rownames(var = "Compounds")
+colnames(Flavone) <- colnames(gene_wgcna)
+#相关性分析
+meta_cor <- cor(t(unigene_tf),t(kegg_gene))
+meta_cut <- which(meta_cor>0.6,arr.ind = TRUE)
+meta_cut<- data.frame(meta_cut) 
+meta_cor_cut <- meta_cor[unique(meta_cut$row),unique(meta_cut$col)]
+dim(meta_cor_cut)
+TF_cor <- data.frame(meta_cor$r)
+TF_p <- data.frame(meta_cor$p)
+TF_network <- bind_cols(TF_cor,TF_p)
+TF_network$GeneID <- rownames(TF_cor)
+TF_net <- TF_network %>% left_join(stage_mean,by="GeneID")
+write_csv(TF_net,file.path("fsn_cor.csv"))
+which(meta_cor[,"Unigene0057769"]>0.7,arr.ind = TRUE)
+# network analysis
+net <- as_tbl_graph(meta_cor_cut,weighted = T,directed = FALSE)%>%  activate(edges) %>% filter(weight>0.6)%>% activate(nodes) %>% left_join(TF,by=c("name"="GeneID")) %>% left_join(k_gene,by=c("name"="GeneID")) %>%  mutate(Clas=ifelse(is.na(TF_family),Symbol.y,Symbol.x)) 
+
+ggraph(net,layout = "stress")+geom_edge_link(aes(edge_width=weight),color="black",alpha=0.4,show.legend = FALSE)+geom_node_point(aes(filter=(name%in%c("Unigene0017387","Unigene0013901","Unigene0004350","Unigene0063581","Unigene0065865","Unigene0012401","Unigene0012052"))),size=15,color="#000000")+geom_node_point(aes(fill=type),size=12,shape=21,color="white",show.legend = FALSE)+ geom_node_text(aes(filter=(type==TRUE),label=Clas,fontface="bold"))+geom_node_text(aes(filter=(type==FALSE),label=Clas),repel = FALSE,color="#d11141")+
+  scale_fill_brewer(palette = "Set2")+scale_edge_width(range = c(0.1,1))+theme_void()
+
+
+ggraph(net,layout = "stress")+geom_edge_link(aes(edge_width=weight),color="black",alpha=0.4,show.legend = FALSE)+geom_node_point(aes(fill=type),size=12,shape=21,color="white",show.legend = FALSE)+ geom_node_text(aes(filter=(type==TRUE),label=Clas,fontface="bold"))+geom_node_text(aes(filter=(type==FALSE),label=Clas),repel = FALSE,color="#d11141")+
+  scale_fill_brewer(palette = "Set2")+scale_edge_width(range = c(0.1,1))+theme_void()
+
+
+kegg <- c("Apigenin 7-O-glucoside (Cosmosiin)
+","Luteolin","Quercetin 3-O-rutinoside (Rutin)","Naringenin
+","Apigenin","Naringenin chalcone","Quercetin")
+# 
+Flavone <- metabolite %>% filter(Index %in% c(KEGG_flavonoid[[1]],KEGG_flavone[[1]],KEGG_isof[[1]]))%>% select(Index,C.S1.B.1:Y.S3.T.3) %>% view()
+
+KEGG_flavonoid <- str_split(c("pme0002;pme0089;pme0324;pme0331;pme0372;pme0376;pme0379;pme0399;pme0442;pme0450;pme1399;pme1478;pme1524;pme1537;pme1583;pme2319;pme2895;pme2954;pme2957;pme2963;pme2979;pme3282;pme3300;pme3461;pme3466;pme3473;pme3609;pmf0057;pmf0058;pmf0344;pmf0584"),";")
+
+KEGG_flavone <-  str_split(c("pma1116;pmb0604;pmb0605;pme0089;pme0202;pme0332;pme0363;pme0379;pme1478;pme1541;pme1624;pme2459;pme2954;pme3212;pme3268;pme3288;pme3296;pme3401;pmf0472"),";")
+
+KEGG_isof <- str_split(c("pme0376;pme0379;pme1578;pme3208;pme3210;pme3233;pme3250;pme3252;pme3258;pme3266;pme3276;pme3292;pme3400;pme3502;pmf0058"),";")
+rownames(Flavone) <- Flavone$Index
+Flavone <- Flavone[,-1]
+
+kegg_gene_flavonoid <- str_split(c("Unigene0000868;Unigene0003838;Unigene0006030;Unigene0006098;Unigene0006111;Unigene0008186;Unigene0008894;Unigene0011581;Unigene0012378;Unigene0012544;Unigene0013329;Unigene0014358;Unigene0014612;Unigene0016769;Unigene0019821;Unigene0044446;Unigene0045503;Unigene0045578;Unigene0045709;Unigene0046529;Unigene0047189;Unigene0049986;Unigene0049987;Unigene0050046;Unigene0050335;Unigene0051400;Unigene0051929;Unigene0052166;Unigene0053319;Unigene0053354;Unigene0054293;Unigene0054853;Unigene0055024;Unigene0055496;Unigene0055520;Unigene0055666;Unigene0056404;Unigene0059386;Unigene0062637;Unigene0066016;Unigene0066017;Unigene0066040;Unigene0066042;Unigene0067187;Unigene0068938;Unigene0068939;Unigene0072490;Unigene0079687;Unigene0085229;Unigene0087304;Unigene0087749;Unigene0087750;Unigene0090414;Unigene0092031;Unigene0097485;Unigene0101901;Unigene0102088;Unigene0116040;Unigene0121091;Unigene0123026;Unigene0000868;Unigene0010819;Unigene0055520;Unigene0079687;Unigene0099305;Unigene0108556"),";")
+
+```
+
+#Random Forest
+```{r}
+RF <- metabolite_r %>% filter(str_detect(Class,fixed("Flav",ignore_case = TRUE))) %>% select(Compounds,C.S1.B.1:Y.S3.T.3) %>% select(-contains("S1.B")) %>%column_to_rownames(var = "Compounds")  
+
+  filter(str_detect(Class,fixed("Flavone",ignore_case = FALSE)))  
+# black module 
+RF <- read_csv("black.csv")
+RF <- RF %>% filter(TF_family!="NA") %>% select(GeneID,Y_S1_Bud_rpkm:C_S3_Tube_rpkm) %>% select(-contains("Bud")) %>% column_to_rownames(var = "GeneID")
+
+
+RF_t <- data.frame(t(RF))
+RF_t <- RF_t %>% mutate(Class=rep(c("R","D"),4))
+set.seed(1234)
+model_rf <- train(Class~.,
+                  data = RF_t,
+                  method="rf",
+                  preProcess=c("scale","center"),
+                  trControl=trainControl(method="repeatedcv",
+                      number = 5,
+                      repeats =5,
+                      savePredictions = TRUE,
+                      verboseIter = FALSE))
+
+Important <- varImp(model_rf,scale = FALSE)
+plot(Important,top = 20)
+newRF <- rfFuncs
+index <- createMultiFolds(Flavone_t$Class, times = 5)
+ctrl <- rfeControl(method = "repeatedcv",
+                   repeats = 5,
+                   verbose = TRUE,
+                   functions = newRF,
+                   index = index)
+set.seed(721)
+rfRFE <- rfe(x,y,
+             metric = "ROC",
+             rfeControl = ctrl,
+             ntree=1000)
+
+```
+
+# glmnet model
+
+```{r}
+col <- c(15:26,30:41)
+GL <- metabolite_g[str_detect(Class,fixed("Flav",ignore_case = TRUE)),] %>% .[,..col]
+rownames(GL) <- metabolite_g[str_detect(Class,fixed("Flav",ignore_case = TRUE)),][,Compounds]
+GL_t <- t(GL)
+colnames(GL_t) <- metabolite_g[str_detect(Class,fixed("Flav",ignore_case = TRUE)),][,Compounds]
+GL_t <- as.data.table(GL_t)
+GL_t[,Class:= rep(c("R","D"),each=3,4)]
+GL_t[,Class:=ifelse(Class=="R",1,0)]
+set.seed(1)
+x <-scale(GL_t[,-199],center = TRUE,scale = TRUE)
+y <- GL_t$Class
+fit=glmnet(x,y,family = "binomial",alpha = 1)
+plot(fit,label = TRUE)
+cvfit=cv.glmnet(x,y,family="binomial",type.measure = "class",nfolds = 5)
+plot(cvfit)
+coef(cvfit,s="lambda.1se")
+```
+
+# PCA analysis
+```{r}
+df.allsample <- metabolite %>%select(Compounds,CS1B1:YS3T3) %>%column_to_rownames(var = "Compounds") %>% as.data.frame() %>% t()
+
+pcA <- prcomp(df.allsample,scale. = TRUE)
+
+rot <- pcA$x%>% as.data.frame() %>%  mutate(variety=rep(c("CS1","CS2F","CS2T","CS3F","CS3T","YS1","YS2F","YS2T","YS3F","YS3T"),each=3),cultivar=rep(c("C","Y"),each=15),tissue=rep(c("Bud","Ray_flower","Disc_flower","Ray_flower","Disc_flower"),each=3,2))
+
+percentVariance <- pcA$sd^2/sum(pcA$sd^2)*100
+
+ggplot(rot,aes(PC1,PC2,color=tissue))+geom_point(size=2,alpha=0.8)+stat_ellipse(aes(group=tissue,color=tissue))+scale_color_brewer(palette = "Dark2")+theme_classic()+theme(legend.direction = 'horizontal', legend.position = 'top')+labs(x="PC1(22.95% explained var.)",y="PC2(17.00% explained var.",color=" ")
+
+plot_ly(rot,x=~PC1,y=~PC2,z=~PC3) %>% add_markers(color=~variety,colors=c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D","#666666","#000000","#d11141"))
+
+ggplot(rot,aes(x=PC1,y=PC2,color=variety))+geom_point(size=5,alpha=0.8,show.legend = FALSE)+geom_hline(yintercept = 0,linetype=2)+
+  geom_vline(xintercept = 0,linetype=2)+scale_color_manual(values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A", "#66A61E", "#E6AB02", "#A6761D", "#666666","#000000","#d11141"))+ggrepel::geom_label_repel(aes(label=variety),show.legend = FALSE)+
+  theme_minimal()
+```
+
+```{r}
+tibble(up=29,
+       down=3,
+       VAR= "Y_VS_C") %>% gather(key = Y_VS_C,value = num,up,down) %>% ggplot(aes(x=Y_VS_C,y=num,fill=Y_VS_C))+geom_bar(stat = "identity",position = "dodge",width = 0.5,show.legend = FALSE,alpha=0.8)+theme_minimal()+scale_fill_manual(values = c("#56B4E9","#d11141"))+geom_text(aes(label=num),size=8,nudge_y = 1)+theme(axis.text = element_text(size = 18,color = "#000000"),axis.title = element_text(size = 20))+labs(y=" ")
+```
+
+```{r}
+apigenin <- read_csv("Apigenin.csv") %>% filter(Compounds=="Apigenin")%>% select(Compounds,Sample,value,tissue)%>% group_by(tissue) %>% summarise(Mean=mean(value)) 
+rpkm <- read_csv("stage_mean.csv")%>% filter(GeneID %in% c("Unigene0051304","Unigene0057769")) %>% select(GeneID,C_S1_Bud_rpkm:C_S3_Tube_rpkm,Y_S1_Bud_rpkm:Y_S3_Tube_rpkm) %>% column_to_rownames(var = "GeneID")
+rpkm <- as.data.frame(t(rpkm))
+rpkm <- rpkm %>% mutate(apigene=apigenin$Mean)
+rpkm[6:10,] %>%ggplot(aes(Unigene0051304,apigene))+geom_point(size=3,color="#D55E00")+geom_smooth(method = 'lm',se=FALSE,linetype=2)+theme_classic()+labs(y="Apigenin")
+summary(lm(Unigene0051304~apigene,data = rpkm[6:10,]))
+  
+  cor(rpkm[1:5,]$Unigene0051304,rpkm[1:5,]$apigene)
+
+```
+
+```{r}
+metabolite <- read_csv("metabolite.csv",locale = locale(encoding="GB18030"))
+
+colnames(metabolite) <- str_remove_all(colnames(metabolite),"-")
+
+meta_mean <- metabolite%>% select(Compounds,CS1B1:YS3T3) %>% gather(key = Sample,value = value,CS1B1:YS3T3)%>% group_by(Compounds)%>% mutate(tissue=rep(c("CS1","CS2R","CS2D","CS3R","CS3D","YS1","YS2R","YS2D","YS3R","YS3D"),each=3)) %>% ungroup() %>% group_by(Compounds,tissue)%>%  summarise(Mean_value=mean(value)) 
+
+
+meta_plot <-
+  meta_mean %>%group_by(tissue) %>% arrange(tissue,desc(Mean_value)) %>% top_n(10) %>%filter(tissue%in% c("CS1","CS2R","CS2D","CS3R","CS3D")) %>% mutate(APIR=if_else(str_detect(Compounds,fixed("apigenin",ignore_case = TRUE)),"Api","other"))%>% ggplot(aes(reorder_within(Compounds,Mean_value,tissue),Mean_value,fill=APIR))+geom_bar(stat = "identity",width = 0.8,show.legend = FALSE)+coord_flip()+scale_fill_manual(values = c("Api"="purple4","other"="#8c8c8c"))+theme_minimal()+theme(axis.text=element_text(size = 20,color = "#000000"),strip.text = element_text(size = 20))+labs(x="",y="")+scale_x_reordered()+facet_wrap(~tissue,scales = "free",ncol = 2)
+  
+  
+  split(.$tissue) %>% map(~ggplot(.,aes(fct_reorder(Compounds,Mean_value),Mean_value,fill=APIR))+geom_bar(stat = "identity",show.legend = FALSE)+coord_flip()+scale_fill_manual(values = c("Api"="purple4","other"="#8c8c8c"))+theme_minimal()+theme(axis.text=element_text(size = 15,color = "#000000"))+labs(x="",y=""))
+
+
+reorder_within <- function(x, by, within, fun = mean, sep = "___", ...) {
+  new_x <- paste(x, within, sep = sep)
+  stats::reorder(new_x, by, FUN = fun)
+}
+scale_x_reordered <- function(..., sep = "___") {
+  reg <- paste0(sep, ".+$")
+  ggplot2::scale_x_discrete(labels = function(x) gsub(reg, "", x), ...)
+}
+scale_y_reordered <- function(..., sep = "___") {
+  reg <- paste0(sep, ".+$")
+  ggplot2::scale_y_discrete(labels = function(x) gsub(reg, "", x), ...)
+}
+
+metabolite <- metabolite %>% select(-c(10,11))
+metabolite %>% select(Compounds,Class,YS2F1)%>% arrange(desc(YS2F1)) %>% filter(n()>10)
+plot <- list(meta_plot$CS1,meta_plot$CS2D,meta_plot$CS2R,meta_plot$CS3D,meta_plot$CS3R)
+grid.arrange(grobs=plot,ncol=3)
+```
+
+
+```{r}
+library(data.table)
+stage_mean <- fread("stage_mean.csv")
+uvr8 <- stage_mean[grep("UVR8",stage_mean$Symbol),]
+uvr8 <- as_tibble(uvr8)
+uvr8 %>% select(GeneID,contains("rpkm")) %>% gather(key = "tissue",value = "value",Y_S1_Bud_rpkm:C_S3_Tube_rpkm)%>% ggplot(aes(tissue,value))+geom_bar(stat = "identity")+facet_wrap(~GeneID,scales = "free_y",ncol = 2)+theme(axis.text.x = element_text(angle = 45))
+```
+
+
+

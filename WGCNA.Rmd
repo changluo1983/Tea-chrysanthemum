@@ -1,0 +1,163 @@
+---
+title: "Untitled"
+author: "luochang"
+date: "2019/2/20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(WGCNA)
+allowWGCNAThreads()
+
+```
+
+```{r}
+t_stage <- read_csv("R-DATA/t_stage_all.csv")
+c_stage <- read_csv("R-DATA/c_stage_all.csv")
+stage_process <- t_stage %>% left_join(c_stage,by="GeneID") %>% select(GeneID,contains("rpkm"),-Y_S3_Tube_rpkm,-Y_S3_Flat_rpkm) %>% filter(Y_S1_B1_rpkm>1,Y_S1_B2_rpkm>1,Y_S1_B3_rpkm>1,Y_S2_F1_rpkm>1,Y_S2_F2_rpkm>1,Y_S2_F3_rpkm>1,Y_S2_T1_rpkm>1,Y_S2_T2_rpkm>1,Y_S2_T3_rpkm>1,Y_S3_F1_rpkm>1,Y_S3_F2_rpkm>1,Y_S3_F3_rpkm>1,Y_S3_T1_rpkm>1,Y_S3_T2_rpkm>1,Y_S3_T3_rpkm>1,C_S1_B1_rpkm>1,C_S1_B2_rpkm>1,C_S1_B3_rpkm>1,C_S2_F1_rpkm>1,C_S2_F2_rpkm>1,C_S2_F3_rpkm>1,C_S2_T1_rpkm>1,C_S2_T2_rpkm>1,C_S2_T3_rpkm>1,C_S3_F1_rpkm>1,C_S3_F2_rpkm>1,C_S3_F3_rpkm>1,C_S3_T1_rpkm>1,C_S3_T2_rpkm>1,C_S3_T3_rpkm>1) 
+write_csv(stage_process,file.path("R-DATA/stage_process.csv"))
+
+
+stage_mean <- read_csv("R-DATA/stage_mean.csv")
+stage_mean_process <- 
+        stage_mean %>% filter(Y_S1_Bud_rpkm >10,Y_S2_Flat_rpkm>10,Y_S2_Tube_rpkm>10,Y_S3_Flat_rpkm>10,Y_S3_Tube_rpkm>10,C_S1_Bud_rpkm>10,C_S2_Flat_rpkm>10,C_S2_Tube_rpkm>10,C_S3_Flat_rpkm>10,C_S3_Tube_rpkm>10)
+
+c_stagedf <- as.data.frame(stage_process)
+c_stagedf <- c_stagedf[,-1]
+rownames(c_stagedf) <- stage_process$GeneID
+samples <- read_csv("R-DATA/Sam_info.csv")
+samples <- as.data.frame(samples)
+rownames(samples) <- samples$ID_REF
+samples <- samples[,-1]
+```
+
+```{r}
+expro <- c_stagedf
+m.vars <- apply(expro,1,var)
+expro.upper <- expro[which(m.vars>quantile(m.vars,probs = seq(0,1,0.25))[4]),]
+datExpr <- as.data.frame(t(expro.upper))
+nGenes <- ncol(datExpr)
+nSamples <- nrow(datExpr)
+```
+# Sample clustering
+```{r}
+gsg = goodSamplesGenes(datExpr, verbose = 3);
+gsg$allOK
+sampleTree = hclust(dist(datExpr), method = "average")
+plot(sampleTree, main = "Sample clustering to detect outliers"
+     , sub="", xlab="")
+```
+#软阈值筛选
+```{r}
+powers = c(seq(1,10,by = 1), seq(12, 20, by = 2))
+sft = pickSoftThreshold(datExpr, powerVector = powers, verbose = 5)
+plot(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     xlab="Soft Threshold (power)",ylab="Scale Free Topology Model Fit,signed R^2",type="n",
+     main = paste("Scale independence"))
+text(sft$fitIndices[,1], -sign(sft$fitIndices[,3])*sft$fitIndices[,2],
+     labels=powers,col="red")
+abline(h=0.90,col="red")
+plot(sft$fitIndices[,1], sft$fitIndices[,5],
+     xlab="Soft Threshold (power)",ylab="Mean Connectivity", type="n",
+     main = paste("Mean connectivity"))
+text(sft$fitIndices[,1], sft$fitIndices[,5], labels=powers, cex=cex1,col="red")
+```
+#
+```{r}
+net <-  blockwiseModules(datExpr, power = 16, maxBlockSize = 6000,
+                       TOMType = "unsigned", minModuleSize = 30,
+                       reassignThreshold = 0, mergeCutHeight = 0.25,
+                       numericLabels = TRUE, pamRespectsDendro = FALSE,
+                       saveTOMs = TRUE,
+                       saveTOMFileBase = "AS-green-FPKM-TOM",
+                       verbose = 3)
+table(net$colors)
+```
+#result viulization
+```{r}
+mergedColors<- labels2colors(net$colors)
+plotDendroAndColors(net$dendrograms[[1]], mergedColors[net$blockGenes[[1]]],"Module colors",
+                    dendroLabels = FALSE, hang = 0.03,
+                    addGuide = TRUE, guideHang = 0.05)
+```
+# save result
+```{r}
+moduleLabels = net$colors
+moduleColors = labels2colors(net$colors)
+table(moduleColors)
+MEs = net$MEs
+geneTree = net$dendrograms[[1]]
+save(MEs, moduleLabels, moduleColors, geneTree,
+     file = "AS-green-FPKM-02-networkConstruction-auto.RData")
+```
+##表型与模块相关性##
+```{r}
+moduleLabelsAutomatic = net$colors
+moduleColorsAutomatic = labels2colors(moduleLabelsAutomatic)
+moduleColorsWW = moduleColorsAutomatic
+MEs0 = moduleEigengenes(datExpr, moduleColorsWW)$eigengenes
+MEsWW = orderMEs(MEs0)
+modTraitCor = cor(MEsWW, samples, use = "p")
+colnames(MEsWW)
+modlues=MEsWW
+modTraitP = corPvalueStudent(modTraitCor, nSamples)
+textMatrix = paste(signif(modTraitCor, 2), "\n(", signif(modTraitP, 1), ")", sep = "")
+dim(textMatrix) = dim(modTraitCor)
+labeledHeatmap(Matrix = modTraitCor, xLabels = colnames(samples), yLabels = names(MEsWW), cex.lab = 0.9,  yColorWidth=0.01, 
+               xColorWidth = 0.03,
+               ySymbols = colnames(modlues), colorLabels = FALSE, colors = blueWhiteRed(20), 
+               textMatrix = textMatrix, setStdMargins = FALSE, cex.text = 0.5, zlim = c(-1,1)
+               , main = paste("Module-trait relationships"))
+```
+
+```{r}
+TOM <- TOMsimilarityFromExpr(datExpr, power = 16)
+write.table(TOM,file="R-DATA/TOM.txt")
+modules <- c("nightblue")
+probes <- names(datExpr)
+inModule <- is.finite(match(moduleColors,modules))
+modProbes <- probes[inModule]
+modTOM <- TOM[inModule,inModule]
+dimnames(modTOM) <- list(modProbes,modProbes)
+
+cyt <- exportNetworkToCytoscape(modTOM,
+                               edgeFile = paste("AS-nightblue-FPKM-One-step-CytoscapeInput-edges-", paste(modules, collapse="-"), ".txt", sep=""),
+                               nodeFile = paste("AS-nightblue-FPKM-One-step-CytoscapeInput-nodes-", paste(modules, collapse="-"), ".txt", sep=""),
+                               weighted = TRUE,
+                               threshold = 0.02,
+                               nodeNames = modProbes,
+                               nodeAttr = moduleColors[inModule])
+
+```
+# network
+```{r}
+library(tidygraph)
+library(ggraph)
+```
+
+```{r}
+fromNode <- cyt[["edgeData"]][["fromNode"]]
+toNode <- cyt[["edgeData"]][["toNode"]]
+weight <- cyt[["edgeData"]][["weight"]]
+salmon <- data.frame(fromNode,toNode,weight)
+salmon <- salmon %>% filter(weight>0.2)
+salmon_f_graph <- 
+        as_tbl_graph(salmon,directed = FALSE) 
+activate(nodes) %>% 
+        mutate(nodeName=cyt[["nodeData"]][["nodeName"]])
+layout <- create_layout(salmon_f_graph,layout = "kk")
+ggraph(layout)+geom_edge_link(aes(width=weight),alpha=0.2)+
+        geom_node_point(aes(size=8),color="goldenrod4")+theme_graph()
+```
+
+```{r}
+
+moduleColors$GeneID <- rownames(expro.upper)
+moduleColors %>% filter(value=="greenyellow") %>% left_join(t_stage,by="GeneID") %>% view()
+```
+
