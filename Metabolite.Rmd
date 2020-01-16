@@ -10,15 +10,30 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r }
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(readr)
+library(stringr)
 library(pheatmap)
 library(RColorBrewer)
 library(d3heatmap)
-metabolite <- read_csv("metabolite.csv")
+metabolite <- read_csv("metabolite.csv",locale = locale(encoding="GB18030"))
+colnames(metabolite) <- str_remove_all(colnames(metabolite),"-")
 metabolite_g <- fread("metabolite.csv")
 # all meatabolite
 
-Flavone <- metabolite %>% filter(str_detect(Class,fixed("Flav",ignore_case = TRUE)))%>% select(Compounds,C.S1.B.1:Y.S3.T.3) %>% gather(key = sample,value = mass,C.S1.B.1:Y.S3.T.3) %>% mutate(species=ifelse(str_detect(sample,fixed("C",ignore_case = FALSE)),"14_C_1","YUTAI")) %>% separate(sample,into = c("tissue","NO"),sep = 6) %>% group_by(Compounds,species,tissue) %>%summarize(Mean=mean(mass)) %>%ungroup() %>%  select(Compounds,tissue,Mean) %>%  spread(key = tissue,value = Mean) 
+Flavone <- metabolite %>%
+           filter(str_detect(Class,fixed("Flav",ignore_case = TRUE)))%>%     
+           select(Compounds,CS1B1:YS3T3) %>% 
+           gather(key = sample,value = mass,CS1B1:YS3T3) %>%   
+           mutate(species=ifelse(str_detect(sample,fixed("C",ignore_case = FALSE)),                 "14_C_1","YUTAI")) %>% 
+           separate(sample,into = c("tissue","NO"),sep = 6) %>% 
+           group_by(Compounds,species,tissue) %>%
+           summarize(Mean=mean(mass)) %>%
+           ungroup() %>% 
+           select(Compounds,tissue,Mean) %>% 
+           spread(key = tissue,value = Mean) 
 Flavone <- as.data.frame(Flavone)
 rownames(Flavone) <- Flavone$Compounds
 Flavone_m <- Flavone[,-1]
@@ -37,12 +52,24 @@ ann_colors <- list(Cultivar=c(C_14_1="#D55E00",Yutai="#56B4E9"),
 
 pheatmap(Flavone_m,scale = "row",color = colorRampPalette(c('blue',"white","red"))(100),show_rownames = FALSE,cutree_cols = 3,cluster_rows = TRUE,annotation_row = annotation_row,annotation_col = annotation_col,
          annotation_colors = ann_colors,fontsize = 14,cellwidth = 45)
-
+metabolite <- metabolite %>% select(Index,c(12:41))
+metabolite <- as.data.frame(metabolite)
+rownames(metabolite) <- metabolite$Index
+metabolite <- metabolite[,-1]
+metabolite_1 <- metabolite[1:10,]
+metabolite_1 <- scale(metabolite_1)
+metabolite <- matrix(metabolite_1)
+pheatmap(Flavone_m,scale = 'row',cluster_cols = FALSE,show_rownames = FALSE,color = colorRampPalette(c('black',"#440154FF","#21908CFF","#FDE725FF","white"))(100))
 
 # Flavonoid pheatmap
 
-Flavone <-metabolite %>% filter(Compounds=="Apigenin") %>%  select(Compounds,C.S1.B.1:Y.S3.T.3) %>% gather(key = Sample,value = Expre,C.S1.B.1:Y.S3.T.3)
-pheatmap(Flavone,scale = "row",cluster_cols = FALSE,color = colorRampPalette(c('blue',"white","red"))(100))
+Flavone <-metabolite %>% filter(str_detect(Compounds,fixed("Apigenin",ignore_case = TRUE))) %>%  select(Compounds,CS1B1:YS3T3) 
+Flavone <- as.data.frame(Flavone)
+rownames(Flavone) <- Flavone$Compounds
+Flavone_m <- Flavone[,-1]
+
+pheatmap(Flavone_m,scale = "row",cluster_cols = FALSE,color =colorRampPalette(c('black',"black","black","#F0E442","#F0E442"))(100),border_color = "white",cellwidth = 7,cellheight = 14)
+
 
 pheatmap(Flavone,scale = "row",color = colorRampPalette(c('blue',"white","red"))(100),annotation_col = annotation_col,show_rownames = FALSE,annotation_colors = ann_colors,annotation_row = annotation_row,cluster_rows = TRUE,cutree_cols = 3)
 
@@ -131,12 +158,15 @@ library(graphlayouts)
 library(pheatmap)
 # 转录因子
 TF <- read_csv("TF.csv")
+stage_mean <- read_csv('stage_mean.csv')
+c_stage_all <- read_csv("c_stage_all.csv")
+t_stage_all <- read_csv("t_stage_all.csv")
 TF <- TF %>% left_join(stage_mean,by="GeneID") %>% select(GeneID,TF_family,Symbol)
 unigene_tf <- c_stage_all %>% left_join(t_stage_all,by="GeneID") %>%  filter(GeneID%in%TF$GeneID) %>% select(GeneID,contains("rpkm"),-Y_S3_Flat_rpkm,-Y_S3_Tube_rpkm )%>% filter_all(all_vars(.> 1))%>% column_to_rownames(var = "GeneID")
 
 # kegg注释基因
 kegg_gene <- read_csv("kegg_flavono_gene_filter.csv")
-k_gene <- kegg_gene %>% filter(GeneID%in% c("Unigene0066042","Unigene0057769","Unigene0053354","Unigene0053319","Unigene0046529","Unigene0050335","Unigene0055520"))%>% select(GeneID,Symbol)
+k_gene <- kegg_gene %>% filter(GeneID%in% c("Unigene0066042","Unigene0057769","Unigene0053354"))%>% select(GeneID,Symbol)
 kegg_gene <- c_stage_all %>%left_join(t_stage_all,by="GeneID") %>% filter(GeneID%in% k_gene$GeneID) %>% select(GeneID,contains("rpkm"),-Y_S3_Flat_rpkm,-Y_S3_Tube_rpkm)%>% column_to_rownames(var = "GeneID")
 
 
@@ -168,8 +198,9 @@ which(meta_cor[,"Unigene0057769"]>0.7,arr.ind = TRUE)
 # network analysis
 net <- as_tbl_graph(meta_cor_cut,weighted = T,directed = FALSE)%>%  activate(edges) %>% filter(weight>0.6)%>% activate(nodes) %>% left_join(TF,by=c("name"="GeneID")) %>% left_join(k_gene,by=c("name"="GeneID")) %>%  mutate(Clas=ifelse(is.na(TF_family),Symbol.y,Symbol.x)) 
 
-ggraph(net,layout = "stress")+geom_edge_link(aes(edge_width=weight),color="black",alpha=0.4,show.legend = FALSE)+geom_node_point(aes(filter=(name%in%c("Unigene0017387","Unigene0013901","Unigene0004350","Unigene0063581","Unigene0065865","Unigene0012401","Unigene0012052"))),size=15,color="#000000")+geom_node_point(aes(fill=type),size=12,shape=21,color="white",show.legend = FALSE)+ geom_node_text(aes(filter=(type==TRUE),label=Clas,fontface="bold"))+geom_node_text(aes(filter=(type==FALSE),label=Clas),repel = FALSE,color="#d11141")+
-  scale_fill_brewer(palette = "Set2")+scale_edge_width(range = c(0.1,1))+theme_void()
+ggraph(net,layout = "stress")+geom_edge_link(aes(edge_width=weight),color="black",alpha=0.4,show.legend = FALSE)+geom_node_point(aes(fill=type),size=12,shape=21,color="white",show.legend = FALSE,alpha=0.8)+geom_node_point(aes(filter=(name%in%c("Unigene0017387","Unigene0013901","Unigene0004350","Unigene0063581","Unigene0065865","Unigene0012401","Unigene0012052","Unigene0039434"))),size=12,color="#56B4E9")+ geom_node_text(aes(filter=(type==TRUE),label=Clas,fontface="bold"))+
+  geom_node_text(aes(filter=(type==FALSE),label=Clas),repel = FALSE,color="#000000")+
+  scale_fill_manual(values = c("#8c8c8c","#f37735"))+scale_edge_width(range = c(0.1,1))+theme_void()
 
 
 ggraph(net,layout = "stress")+geom_edge_link(aes(edge_width=weight),color="black",alpha=0.4,show.legend = FALSE)+geom_node_point(aes(fill=type),size=12,shape=21,color="white",show.legend = FALSE)+ geom_node_text(aes(filter=(type==TRUE),label=Clas,fontface="bold"))+geom_node_text(aes(filter=(type==FALSE),label=Clas),repel = FALSE,color="#d11141")+
